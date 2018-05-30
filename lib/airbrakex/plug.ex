@@ -44,6 +44,7 @@ defmodule Airbrakex.Plug do
 
       defp proceed?(ignore, _error) when is_nil(ignore), do: true
       defp proceed?(ignore, error) when is_function(ignore), do: !ignore.(error)
+      defp proceed?({mod, fun} = _ignore, error) when is_atom(mod) and is_atom(fun), do: !apply(mod, fun, [error])
 
       defp proceed?(ignore, error) when is_list(ignore),
         do: !Enum.any?(ignore, fn el -> el == error.type end)
