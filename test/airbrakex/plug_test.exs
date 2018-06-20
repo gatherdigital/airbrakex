@@ -14,6 +14,10 @@ defmodule Airbrakex.PlugTest do
     false
   end
 
+  def prepare_context_function(_conn, _error) do
+    %{}
+  end
+
   test "notifies with request url in context" do
     notify fn -> Airbrakex.TestPlug.call(conn(:get, "/wat"), %{}) end, fn _conn, params ->
       %{"context" => context} = params
@@ -27,6 +31,15 @@ defmodule Airbrakex.PlugTest do
       notify fn -> Airbrakex.TestPlug.call(conn(:get, "/wat"), %{}) end, fn(_conn, _params) -> :nothing end
     after
       Application.delete_env(:airbrakex, :ignore)
+    end
+  end
+
+  test "prepare_context with {module, fun} tuple" do
+    Application.put_env(:airbrakex, :prepare_context, {Airbrakex.PlugTest, :prepare_context_function})
+    try do
+      notify fn -> Airbrakex.TestPlug.call(conn(:get, "/wat"), %{}) end, fn(_conn, _params) -> :nothing end
+    after
+      Application.delete_env(:airbrakex, :prepare_context)
     end
   end
 end
