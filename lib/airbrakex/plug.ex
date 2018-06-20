@@ -35,12 +35,15 @@ defmodule Airbrakex.Plug do
             error = ExceptionParser.parse(exception)
 
             if proceed?(Application.get_env(:airbrakex, :ignore), error) do
-              Notifier.notify(error, params: conn.params, session: session, context: %{url: request_url(conn)})
+              Notifier.notify(error, params: conn.params, session: session, context: build_context(conn))
             end
 
             reraise exception, System.stacktrace()
         end
       end
+
+      defp build_context(conn), do: build_context(conn, Map.get(conn.assigns, :airbrake_context, %{}))
+      defp build_context(conn, ctx), do: Map.merge(%{url: request_url(conn)}, ctx)
 
       defp proceed?(ignore, _error) when is_nil(ignore), do: true
       defp proceed?(ignore, error) when is_function(ignore), do: !ignore.(error)

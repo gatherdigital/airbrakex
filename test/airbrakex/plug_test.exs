@@ -21,6 +21,14 @@ defmodule Airbrakex.PlugTest do
     end
   end
 
+  test "notifies with merged conn.assigns[:airbrake_context]" do
+    conn = conn(:get, "/wat") |> Plug.Conn.assign(:airbrake_context, %{something: "🤔"})
+    notify fn -> Airbrakex.TestPlug.call(conn, %{}) end, fn _conn, params ->
+      %{"context" => context} = params
+      assert "🤔" == Map.get(context, "something")
+    end
+  end
+
   test "ignore with {module, fun} tuple" do
     Application.put_env(:airbrakex, :ignore, {Airbrakex.PlugTest, :ignore_function})
     try do
